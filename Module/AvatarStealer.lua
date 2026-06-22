@@ -1,5 +1,5 @@
 -- =============================================
--- Vexyron AK-Style Avatar Stealer API (GEFIXT)
+-- Vexyron AK-Style Avatar Stealer API (MEGA GEFIXT)
 -- Für XENO - Advanced FE Visible Bypass
 -- =============================================
 
@@ -12,76 +12,87 @@ local function AdvancedFEBypass()
             sethiddenproperty(lp, "SimulationRadius", 9e9)
             sethiddenproperty(lp, "MaximumSimulationRadius", 9e9)
         end
-        
-        if lp and lp.Character then
-            for _, part in ipairs(lp.Character:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    pcall(function()
-                        part:SetNetworkOwner(nil)
-                    end)
-                end
-            end
-        end
     end)
 end
 
 function VexyronAK.StealAvatar(targetName)
     AdvancedFEBypass()
     
-    -- PRÜFEN OB SPIELER EXISTIERT
+    -- Prüfen ob Spieler existiert
     local target = game.Players:FindFirstChild(targetName)
     if not target then
-        warn("[Vexyron] Spieler '" .. targetName .. "' nicht gefunden!")
+        warn("[Vexyron] ❌ Spieler '" .. targetName .. "' nicht gefunden!")
         return nil
     end
     
-    -- PRÜFEN OB CHARACTER GELADEN IST
-    if not target.Character or not target.Character:FindFirstChildOfClass("Humanoid") then
-        warn("[Vexyron] " .. target.Name .. " hat noch keinen Character geladen!")
+    -- Prüfen ob Character existiert
+    if not target.Character then
+        warn("[Vexyron] ❌ " .. target.Name .. " hat keinen Character!")
+        return nil
+    end
+    
+    -- Prüfen ob Humanoid existiert
+    local targetHumanoid = target.Character:FindFirstChildOfClass("Humanoid")
+    if not targetHumanoid then
+        warn("[Vexyron] ❌ " .. target.Name .. " hat kein Humanoid!")
         return nil
     end
 
     local lp = game.Players.LocalPlayer
     if not lp then
-        warn("[Vexyron] LocalPlayer nicht gefunden!")
+        warn("[Vexyron] ❌ LocalPlayer nicht gefunden!")
         return nil
     end
     
-    local targetChar = target.Character
-    local clone = targetChar:Clone()
+    -- KLONE MIT PCALL SCHUTZ
+    local clone = nil
+    local success, err = pcall(function()
+        clone = target.Character:Clone()
+    end)
+    
+    if not success or not clone then
+        warn("[Vexyron] ❌ Clone fehlgeschlagen: " .. tostring(err))
+        return nil
+    end
+    
     clone.Name = "Vexyron_FE_" .. target.Name
     clone.Parent = workspace
+    
+    if not clone.Parent then
+        warn("[Vexyron] ❌ Clone konnte nicht zu Workspace hinzugefügt werden!")
+        return nil
+    end
 
     -- Full Avatar Description kopieren
     local hum = clone:FindFirstChildOfClass("Humanoid")
-    if hum and targetChar:FindFirstChildOfClass("Humanoid") then
+    if hum and targetHumanoid then
         pcall(function()
-            hum:ApplyDescription(targetChar.Humanoid:GetAppliedDescription())
+            hum:ApplyDescription(targetHumanoid:GetAppliedDescription())
         end)
     end
 
-    -- Alles klauen (Accessories, Tools, Clothing)
-    for _, item in ipairs(targetChar:GetChildren()) do
+    -- Accessories, Tools, Clothing klauen
+    for _, item in ipairs(target.Character:GetChildren()) do
         if item:IsA("Accessory") or item:IsA("Tool") or item:IsA("Shirt") or item:IsA("Pants") or item:IsA("BodyColors") then
             pcall(function()
                 local clonedItem = item:Clone()
-                clonedItem.Parent = clone
-                if clonedItem:IsA("BasePart") then
-                    clonedItem:SetNetworkOwner(nil)
+                if clonedItem then
+                    clonedItem.Parent = clone
                 end
             end)
         end
     end
 
     -- LocalPlayer Character ersetzen
-    if lp.Character then 
-        pcall(function()
+    pcall(function()
+        if lp.Character then 
             lp.Character:Destroy() 
-        end)
-    end
+        end
+    end)
+    
     lp.Character = clone
 
-    print("[Vexyron] ✅ Avatar von " .. target.Name .. " erfolgreich gestohlen & FE visible gemacht!")
+    print("[Vexyron] ✅ Avatar von " .. target.Name .. " erfolgreich gestohlen!")
     return clone
 end
 
@@ -90,16 +101,14 @@ function VexyronAK.StealAll()
     local count = 0
     for _, plr in pairs(game.Players:GetPlayers()) do
         if plr ~= game.Players.LocalPlayer then
-            local success = pcall(function()
-                VexyronAK.StealAvatar(plr.Name)
+            local result = VexyronAK.StealAvatar(plr.Name)
+            if result then
                 count = count + 1
-            end)
-            if not success then
-                warn("[Vexyron] Konnte " .. plr.Name .. " nicht stealen")
             end
+            wait(0.5)
         end
     end
-    print("[Vexyron] ✅ " .. count .. " Avatare gestohlen!")
+    print("[Vexyron] ✅ " .. count .. " Avatare erfolgreich gestohlen!")
 end
 
 return VexyronAK
