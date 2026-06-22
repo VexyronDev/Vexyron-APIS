@@ -2,8 +2,8 @@
 print("[Vexyron] Starte Loader...")
 
 local success, err = pcall(function()
-    -- API laden
-    local api = loadstring(game:HttpGet("https://raw.githubusercontent.com/VexyronDev/Vexyron-APIS/main/Modules/AvatarStealer.lua"))()
+    -- API laden (MODULE ohne s!)
+    local api = loadstring(game:HttpGet("https://raw.githubusercontent.com/VexyronDev/Vexyron-APIS/main/Module/AvatarStealer.lua"))()
     getgenv().Vexyron = api
     
     -- UI laden
